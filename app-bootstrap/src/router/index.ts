@@ -1,0 +1,14 @@
+import { createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-router'
+
+import Home from '@/views/Home/index.vue'
+
+export const constantRoutes: RouteRecordRaw[] = [
+  { path: '/', component: Home },
+]
+
+const router = createRouter({
+  history: createMemoryHistory(),
+  routes: constantRoutes,
+})
+
+export default router
