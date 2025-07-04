@@ -3,6 +3,7 @@ import { inject, getCurrentInstance, onMounted, onBeforeUnmount, computed } from
 
 interface Props {
   name: string;
+  active?: boolean;
   checked?: boolean;
   closable?: boolean;
 }
@@ -24,12 +25,17 @@ onMounted(() => {
     closable: props.closable,
     checked: props.checked,
   });
+  if (props.active) {
+    activeTab.value = instance!.uid;
+  }
 });
+
 onBeforeUnmount(() => {
   unregisterTabPane(instance!.uid);
 });
 
 const isActive = computed(() => activeTab.value === instance!.uid);
+
 </script>
 
 <template>

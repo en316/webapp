@@ -1,5 +1,183 @@
+<template>
+    <div :class="wrapperClass">
+        <!-- 顶部或底部 tab 头 -->
+        <template v-if="isHorizontal">
+            <!-- 当tabPosition为bottom时，先显示内容区 -->
+            <template v-if="tabPosition === 'bottom'">
+                <!-- 内容区 -->
+                <div class="bg-white border rounded-t p-4 flex-1 min-h-[60px]">
+                    <slot />
+                </div>
+                <!-- tab头部 -->
+                <div :class="headerClass">
+                    <!-- 前置内容和左箭头 -->
+                    <div class="flex-shrink-0 flex items-center min-w-[40px]">
+                        <slot name="header-before" />
+                        <button class="ml-2 px-2 py-2 rounded hover:bg-gray-200 transition-colors" @click="scrollTabs('left')"
+                            v-if="showScroll" title="左移">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- 可滚动 tab 区域 -->
+                    <div ref="tabScroll" class="flex-1 overflow-hidden whitespace-nowrap relative">
+                        <div class="inline-flex transition-all duration-200" ref="tabList">
+                            <template v-for="(pane) in panes" :key="pane.uid">
+                                <div :class="[
+                                    'relative px-4 py-2 mr-1 rounded cursor-pointer select-none items-center inline-flex',
+                                    pane.uid === activeIndex ? 'bg-white border-t-2 border-blue-500 font-bold text-blue-600' : 'hover:bg-gray-200',
+                                ]" @click="setActive(pane.uid)" :ref="el => tabRefs[pane.uid] = el">
+                                    <span>
+                                        {{ pane.name }}
+                                    </span>
+                                    <button v-if="closable" class="ml-2 text-gray-400 hover:text-red-500"
+                                        @click.stop="closeTab(pane.uid)" title="关闭">×</button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <!-- 右箭头和后置内容、新增按钮 -->
+                    <div class="flex-shrink-0 flex items-center min-w-[40px]">
+                        <button class="mr-2 px-2 py-2 rounded hover:bg-gray-200 transition-colors" @click="scrollTabs('right')"
+                            v-if="showScroll" title="右移">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                        <button v-if="addable" class="ml-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            @click="addTab" title="新增">+</button>
+                        <slot name="header-after" />
+                    </div>
+                </div>
+            </template>
+            <!-- 当tabPosition为top时，先显示tab头部 -->
+            <template v-else>
+                <!-- tab头部 -->
+                <div :class="headerClass">
+                    <!-- 前置内容和左箭头 -->
+                    <div class="flex-shrink-0 flex items-center min-w-[40px]">
+                        <slot name="header-before" />
+                        <button class="ml-2 px-2 py-2 rounded hover:bg-gray-200 transition-colors" @click="scrollTabs('left')"
+                            v-if="showScroll" title="左移">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- 可滚动 tab 区域 -->
+                    <div ref="tabScroll" class="flex-1 overflow-hidden whitespace-nowrap relative">
+                        <div class="inline-flex transition-all duration-200" ref="tabList">
+                            <template v-for="(pane) in panes" :key="pane.uid">
+                                <div :class="[
+                                    'relative px-4 py-2 mr-1 rounded cursor-pointer select-none items-center inline-flex',
+                                    pane.uid === activeIndex ? 'bg-white border-b-2 border-blue-500 font-bold text-blue-600' : 'hover:bg-gray-200',
+                                ]" @click="setActive(pane.uid)" :ref="el => tabRefs[pane.uid] = el">
+                                    <span>
+                                        {{ pane.name }}
+                                    </span>
+                                    <button v-if="closable" class="ml-2 text-gray-400 hover:text-red-500"
+                                        @click.stop="closeTab(pane.uid)" title="关闭">×</button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <!-- 右箭头和后置内容、新增按钮 -->
+                    <div class="flex-shrink-0 flex items-center min-w-[40px]">
+                        <button class="mr-2 px-2 py-2 rounded hover:bg-gray-200 transition-colors" @click="scrollTabs('right')"
+                            v-if="showScroll" title="右移">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                        <button v-if="addable" class="ml-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            @click="addTab" title="新增">+</button>
+                        <slot name="header-after" />
+                    </div>
+                </div>
+                <!-- 内容区 -->
+                <div class="bg-white border rounded-b p-4 flex-1 min-h-[60px]">
+                    <slot />
+                </div>
+            </template>
+        </template>
+
+        <!-- 左右 tab 头 -->
+        <template v-else>
+            <div class="flex h-full">
+                <!-- 左侧 tab 头 -->
+                <template v-if="tabPosition === 'left'">
+                    <div :class="sideHeaderClass">
+                        <div class="flex-shrink-0">
+                            <slot name="header-before" />
+                        </div>
+                        <div class="flex-1 overflow-y-auto max-h-[60vh]">
+                            <div class="flex flex-col">
+                                <template v-for="(pane) in panes" :key="pane.uid">
+                                    <div :class="[
+                                        'relative px-4 py-2 mb-1 rounded cursor-pointer select-none items-center flex',
+                                        pane.uid === activeIndex ? 'bg-white border-l-4 border-blue-500 font-bold text-blue-600' : 'hover:bg-gray-200',
+                                    ]" @click="setActive(pane.uid)">
+                                        <slot name="tab" :tab="pane" :index="pane.uid" :isActive="pane.uid === activeIndex">
+                                            {{ pane.name }}
+                                        </slot>
+                                        <button v-if="closable" class="ml-2 text-gray-400 hover:text-red-500"
+                                            @click.stop="closeTab(pane.uid)" title="关闭">×</button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 flex flex-col items-center">
+                            <button v-if="addable"
+                                class="mt-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600" @click="addTab"
+                                title="新增">+</button>
+                            <slot name="header-after" />
+                        </div>
+                    </div>
+                    <div class="bg-white border rounded p-4 flex-1 min-h-[60px]">
+                        <slot />
+                    </div>
+                </template>
+                <!-- 右侧 tab 头 -->
+                <template v-else>
+                    <div class="bg-white border rounded p-4 flex-1 min-h-[60px]">
+                        <slot />
+                    </div>
+                    <div :class="sideHeaderClass">
+                        <div class="flex-shrink-0">
+                            <slot name="header-before" />
+                        </div>
+                        <div class="flex-1 overflow-y-auto max-h-[60vh]">
+                            <div class="flex flex-col">
+                                <template v-for="(pane) in panes" :key="pane.uid">
+                                    <div :class="[
+                                        'relative px-4 py-2 mr-1 rounded cursor-pointer select-none items-center inline-flex',
+                                        pane.uid === activeIndex ? 'bg-white border-b-2 border-blue-500 font-bold text-blue-600' : 'hover:bg-gray-200',
+                                    ]" @click="setActive(pane.uid)" :ref="el => tabRefs[pane.uid] = el">
+                                        <slot name="tab" :tab="pane" :index="pane.uid" :isActive="pane.uid === activeIndex">
+                                            {{ pane.name }}
+                                        </slot>
+                                        <button v-if="closable" class="ml-2 text-gray-400 hover:text-red-500"
+                                            @click.stop="closeTab(pane.uid)" title="关闭">×</button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 flex flex-col items-center">
+                            <button v-if="addable"
+                                class="mt-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600" @click="addTab"
+                                title="新增">+</button>
+                            <slot name="header-after" />
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>
+
 <script setup lang="ts">
-import { ref, provide, watch, getCurrentInstance, onMounted, nextTick } from 'vue';
+import { ref, computed, provide, onMounted, nextTick, watch, defineEmits, watchEffect } from 'vue'
 
 interface TabPaneInfo {
     uid: number;
@@ -8,218 +186,203 @@ interface TabPaneInfo {
     checked: boolean;
 }
 
-const props = withDefaults(defineProps<{
-    type?: "top" | "bottom";
-    border?: boolean;
-    tabClass?: string;
-    addable?: boolean;
-    closable?: boolean;
-}>(), {
-    type: 'top',
-    border: true,
-    tabClass: '',
-    addable: false,
-    closable: false,
+
+const props = defineProps({
+    modelValue: { type: [String, Number], default: '' },
+    closable: { type: Boolean, default: true },
+    addable: { type: Boolean, default: false },
+    tabPosition: {
+        type: String,
+        default: 'top',
+        validator: (v: string) => ['top', 'bottom', 'left', 'right'].includes(v),
+    },
+})
+
+const emit = defineEmits([
+    'add', 'update:modelValue'
+])
+
+const panes = ref<TabPaneInfo[]>([])
+const tabRefs = ref({})
+const tabScroll = ref(null)
+const tabList = ref(null)
+const activeIndex = ref<number>(0); // 改为number类型，默认0
+
+const isHorizontal = computed(() => props.tabPosition === 'top' || props.tabPosition === 'bottom')
+const wrapperClass = computed(() => isHorizontal.value ? 'w-full' : 'w-full h-[400px] flex')
+const headerClass = computed(() => {
+    if (props.tabPosition === 'bottom') {
+        return 'flex items-center bg-gray-100 rounded-b p-2 gap-1 border-t'
+    }
+    return 'flex items-center bg-gray-100 rounded-t p-2 gap-1 border-b'
+})
+
+const sideHeaderClass = computed(() => 
+    'flex flex-col items-stretch bg-gray-100 rounded-l p-2 gap-1 border-r min-w-[160px]'
+)
+
+const showScroll = ref(false)
+watchEffect(() => {
+    if (tabList.value && tabScroll.value) {
+        showScroll.value = tabList.value.scrollWidth > tabScroll.value.offsetWidth + 1;
+    } else {
+        showScroll.value = false;
+    }
 });
+// 用 watchEffect 让 showScroll 响应 DOM 变化
 
-const emit = defineEmits(['add']);
+// 监听panes变化，当添加新tab时自动滚动到新tab
+watch(panes, (newPanes, oldPanes) => {
+  if (newPanes.length > oldPanes.length) {
+    nextTick(() => {
+      const latestTab = newPanes[newPanes.length - 1];
+      if (latestTab) {
+        activeIndex.value = latestTab.uid;
+        nextTick(scrollToActive);
+      }
+    });
+  }
+}, { deep: true });
 
-const tabPanes = ref<TabPaneInfo[]>([]);
-const activeTab = ref<number | null>(null);
+function scrollShow() {
+    if (tabList.value && tabScroll.value) {
+        showScroll.value = tabList.value.scrollWidth > tabScroll.value.offsetWidth + 1;
+    } else {
+        showScroll.value = false;
+    }
+}
+
+function setActive(uid: number) {
+    activeIndex.value = uid
+    const idx = panes.value.findIndex(tp => tp.uid === uid)
+    emit('update:modelValue', panes.value[idx]?.name)
+    nextTick(scrollToActive)
+}
+
+function closeTab(uid: number) {
+  if (panes.value.length <= 1) return;
+  const idx = panes.value.findIndex(tp => tp.uid === uid);
+  panes.value.splice(idx, 1);
+  if (activeIndex.value === uid) {
+    // 优先激活前一个tab，否则激活第一个
+    if (panes.value.length > 0) {
+      activeIndex.value = panes.value[Math.max(0, idx - 1)].uid;
+    }
+  }
+  emit('update:modelValue', panes.value.length > 0 ? panes.value[0].name : '');
+  nextTick(scrollToActive);
+  scrollShow();
+}
+
+function addTab() {
+    // 这里可以emit事件让父组件插入新的TabPane
+    emit('add')
+    // 添加一个延迟，确保父组件有时间添加新的TabPane
+    setTimeout(() => {
+        if (panes.value.length > 0) {
+            const latestTab = panes.value[panes.value.length - 1];
+            activeIndex.value = latestTab.uid;
+            nextTick(scrollToActive);
+        }
+    }, 10);
+    scrollShow();
+}
+
+function scrollTabs(direction) {
+    if (!tabScroll.value) return
+    const delta = tabScroll.value.offsetWidth * 0.6
+    if (direction === 'left') {
+        tabScroll.value.scrollBy({ left: -delta, behavior: 'smooth' })
+    } else {
+        tabScroll.value.scrollBy({ left: delta, behavior: 'smooth' })
+    }
+}
+
+function scrollToActive() {
+    console.log('scrollToActive called', { 
+        activeIndex: activeIndex.value, 
+        tabRefs: Object.keys(tabRefs.value),
+        panes: panes.value.map(p => ({ uid: p.uid, name: p.name }))
+    });
+    
+    if (!tabScroll.value) {
+        console.log('scrollToActive: tabScroll is null');
+        return;
+    }
+    
+    if (!tabRefs.value[activeIndex.value]) {
+        console.log('scrollToActive: tabRef not found for uid', activeIndex.value);
+        return;
+    }
+    
+    const tabEl = tabRefs.value[activeIndex.value];
+    if (!tabEl) {
+        console.log('scrollToActive: tabEl is null');
+        return;
+    }
+    
+    const scrollEl = tabScroll.value;
+    const tabRect = tabEl.getBoundingClientRect();
+    const scrollRect = scrollEl.getBoundingClientRect();
+    
+    console.log('scrollToActive: rects', { 
+        tabRect: { left: tabRect.left, right: tabRect.right },
+        scrollRect: { left: scrollRect.left, right: scrollRect.right }
+    });
+    
+    if (tabRect.left < scrollRect.left) {
+        const scrollAmount = tabRect.left - scrollRect.left - 16;
+        console.log('scrollToActive: scrolling left by', scrollAmount);
+        scrollEl.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    } else if (tabRect.right > scrollRect.right) {
+        const scrollAmount = tabRect.right - scrollRect.right + 16;
+        console.log('scrollToActive: scrolling right by', scrollAmount);
+        scrollEl.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+}
 
 function registerTabPane(info: TabPaneInfo) {
-    if (!tabPanes.value.find(tp => tp.uid === info.uid)) {
-        tabPanes.value.push(info);
-        if (activeTab.value === null || info.checked) {
-            activeTab.value = info.uid;
+    if (!panes.value.find(tp => tp.uid === info.uid)) {
+        panes.value.push(info);
+        // 如果是第一个tab或者设置了checked，设置为active
+        if (panes.value.length === 1 || info.checked) {
+            activeIndex.value = info.uid; // 使用uid
         }
     }
 }
 
 function unregisterTabPane(uid: number) {
-    const idx = tabPanes.value.findIndex(tp => tp.uid === uid);
+    const idx = panes.value.findIndex(tp => tp.uid === uid);
     if (idx !== -1) {
-        tabPanes.value.splice(idx, 1);
-        if (activeTab.value === uid) {
-            activeTab.value = tabPanes.value[0]?.uid ?? null;
+        panes.value.splice(idx, 1);
+        if (activeIndex.value === uid) {
+            activeIndex.value = panes.value.length > 0 ? panes.value[0].uid : 0; // 使用uid
         }
     }
 }
 
-function selectTab(uid: number) {
-    activeTab.value = uid;
-    // 滚动到可见
-    nextTick(() => {
-        const el = document.querySelector(`[data-tab-uid="${uid}"]`);
-        el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    });
-}
-
-function closeTab(uid: number, e?: MouseEvent) {
-    if (e) e.stopPropagation();
-    unregisterTabPane(uid);
-    checkOverflow();
-}
-
-function onTabContextMenu(e: MouseEvent, tab: TabPaneInfo) {
-    e.preventDefault();
-    alert(`右键菜单: ${tab.name}`);
-}
-
-// 滚动与溢出处理
-const tabListRef = ref<HTMLElement | null>(null);
-const showMore = ref(false);
-
-function checkOverflow() {
-    const el = tabListRef.value;
-    if (!el) return;
-    showMore.value = el.scrollWidth > el.clientWidth + 2;
-}
-
-// 添加/删除 tab 后
-watch(tabPanes, () => nextTick(checkOverflow));
-
-// 容器宽度变化时
-onMounted(() => {
-    nextTick(checkOverflow);
-    if (window.ResizeObserver) {
-        const ro = new ResizeObserver(() => checkOverflow());
-        if (tabListRef.value) ro.observe(tabListRef.value);
-    } else {
-        window.addEventListener('resize', checkOverflow);
-    }
-});
-
-function handleAdd() {
-    emit('add');
-    checkOverflow();
-}
-
-const showDropdown = ref(false);
-const dropdownX = ref(0);
-const dropdownY = ref(0);
-const dropdownRef = ref<HTMLElement | null>(null);
-
-function handleMoreClick(e: MouseEvent) {
-    showDropdown.value = true;
-    dropdownX.value = (e.target as HTMLElement).getBoundingClientRect().left;
-    dropdownY.value = (e.target as HTMLElement).getBoundingClientRect().bottom;
-    nextTick(() => {
-        dropdownRef.value?.focus();
-    });
-}
-
-function handleDropdownSelect(uid: number) {
-    selectTab(uid);
-    showDropdown.value = false;
-}
-
+// 在函数定义后提供依赖
 provide('registerTabPane', registerTabPane);
 provide('unregisterTabPane', unregisterTabPane);
-provide('activeTab', activeTab);
+provide('activeTab', activeIndex);
+
 </script>
 
-<template>
-    <div :class="[
-        'tabs',
-        ...tabClass.split(' '),
-        {
-            'tabs-bottom': props.type == 'bottom',
-            'tabs-border': props.border
-        }
-    ]">
-        <div class="flex items-center w-full">
-            <div class="flex items-center">
-                <slot name="prefix"></slot>
-            </div>
-            <div class="flex-1 relative mx-2 overflow-x-auto scrollbar-hide" ref="tabListRef" style="min-width: 0;">
-                <div class="flex whitespace-nowrap">
-                    <template v-for="tab in tabPanes" :key="tab.uid">
-                        <div class="tab px-4 py-2 tems-center cursor-pointer select-none"
-                            :class="{ 'tab-active': activeTab === tab.uid }" :data-tab-uid="tab.uid"
-                            @click="selectTab(tab.uid)" @contextmenu="onTabContextMenu($event, tab)">
-                                <div>
-                                    <span class="truncate max-w-[120px]">{{ tab.name }}</span>
-                                    <button v-if="tab.closable || closable" class="ml-1" @click.stop="closeTab(tab.uid, $event)"
-                                        style="background: none; border: none; cursor: pointer;" title="关闭">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24"
-                                            stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                    </template>
-                </div>
-            </div>
-            <!-- 下拉所有tab -->
-            <div
-                v-if="showDropdown"
-                class="absolute bg-white shadow rounded border z-50 scrollbar scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-base-100"
-                :style="{ left: dropdownX + 'px', top: dropdownY + 'px', maxHeight: '200px', overflowY: 'auto' }"
-                tabindex="0"
-                ref="dropdownRef"
-                @blur="showDropdown = false"
-            >
-                <div v-for="tab in tabPanes" :key="tab.uid"
-                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                    @click="handleDropdownSelect(tab.uid)">
-                    <span class="truncate max-w-[140px]">{{ tab.name }}</span>
-                    <button v-if="tab.closable || closable" class="ml-1" @click="closeTab(tab.uid, $event)"
-                        style="background: none; border: none; cursor: pointer;" title="关闭">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <!-- 省略/更多按钮 -->
-            <button v-if="showMore" class="ml-2 btn btn-sm btn-ghost"
-                @click="handleMoreClick" style="z-index: 10;">
-                <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
-                    <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-                    <circle cx="16" cy="12" r="1.5" fill="currentColor" />
-                    <circle cx="8" cy="12" r="1.5" fill="currentColor" />
-                </svg>
-            </button>
-            <!-- 添加按钮 -->
-            <button v-if="addable" class="ml-2 btn btn-sm btn-ghost" @click="handleAdd" title="添加">
-                <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-            </button>
-            <div class="flex items-center">
-                <slot name="suffix"></slot>
-            </div>
-        </div>
-    </div>
-    <div>
-        <slot></slot>
-    </div>
-</template>
-
 <style scoped>
-/* 隐藏所有浏览器的滚动条，但允许滚动 */
-.scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
-}
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;             /* Chrome, Safari, Opera */
+/* 针对 Webkit 浏览器优化滚动条宽度 */
+::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-  background: #f3f4f6;
-}
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
+    background: #d1d5db;
+    /* Tailwind gray-300 */
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    /* Tailwind gray-100 */
 }
 </style>

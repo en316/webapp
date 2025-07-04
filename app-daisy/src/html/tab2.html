@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        .tab-bar {
+            display: flex;
+        }
+
+        .tab-item {
+            padding: 4px;
+            margin-left: px;
+            cursor: pointer;
+            border: solid 1px aqua;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .tab-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            transition: opacity 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+
+
+        .tab-bar.vertical {
+            flex-direction: column;
+        }
+
+
+
+        .tab-card-bar {
+            display: flex;
+        }
+
+        .tab-card-item {
+            padding: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .tab-card-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .tab-card-item h3 {
+            margin: 0;
+        }
+
+        .tab-card-item p {
+            display: none;
+        }
+
+        .tab-card-item.active h3 {
+            color: #fff;
+        }
+
+        .tab-card-item.active p {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <div class="tab-bar">
+            <div class="tab-item active">Tab 1</div>
+            <div class="tab-item">Tab 2</div>
+            <div class="tab-item">Tab 3</div>
+        </div>
+        <div class="tab-content">
+            <p>内容1</p>
+        </div>
+        <div class="tab-content active">
+            <p>内容2</p>
+        </div>
+        <div class="tab-content">
+            <p>内容3</p>
+        </div>
+    </div>
+
+    <div>
+        <div class="tab-card-bar">
+            <div class="tab-card-item active">
+                <h3>Tab 1</h3>
+                <p>内容1</p>
+            </div>
+            <div class="tab-card-item">
+                <h3>Tab 2</h3>
+                <p>内容2</p>
+            </div>
+            <div class="tab-card-item">
+                <h3>Tab 3</h3>
+                <p>内容3</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
